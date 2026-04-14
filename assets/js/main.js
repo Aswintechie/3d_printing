@@ -73,47 +73,50 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ===== QUOTE FORM ===== */
+// Fine-grained PAT: Actions write only on this repo (see README for setup)
+const DISPATCH_TOKEN = 'REPLACE_WITH_DISPATCH_TOKEN';
+
 const form = document.getElementById('quoteForm');
 const formContent = document.getElementById('formContent');
 const formSuccess = document.getElementById('formSuccess');
 
-form?.addEventListener('submit', (e) => {
+form?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = form.querySelector('.form-submit');
-  btn.textContent = 'Sending…';
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Sending…';
   btn.disabled = true;
 
-  // Build mailto
-  const name = form.querySelector('[name=name]').value;
-  const email = form.querySelector('[name=email]').value;
-  const phone = form.querySelector('[name=phone]').value;
-  const type = form.querySelector('[name=type]').value;
-  const qty = form.querySelector('[name=qty]').value;
-  const desc = form.querySelector('[name=desc]').value;
+  const payload = {
+    name:  form.querySelector('[name=name]').value.trim(),
+    email: form.querySelector('[name=email]').value.trim(),
+    phone: form.querySelector('[name=phone]').value.trim() || 'Not provided',
+    type:  form.querySelector('[name=type]').value,
+    qty:   form.querySelector('[name=qty]').value,
+    desc:  form.querySelector('[name=desc]').value.trim(),
+  };
 
-  const subject = encodeURIComponent(`3D Print Quotation Request – ${name}`);
-  const body = encodeURIComponent(
-`Hi Aswin,
+  try {
+    const res = await fetch('https://api.github.com/repos/Aswintechie/3d_printing/dispatches', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DISPATCH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ event_type: 'quote_request', client_payload: payload }),
+    });
 
-I'd like to request a quotation for a 3D print.
-
-Name: ${name}
-Email: ${email}
-Phone: ${phone}
-Print Type: ${type}
-Quantity: ${qty}
-
-Description:
-${desc}
-
-Thanks!`
-  );
-
-  setTimeout(() => {
-    window.location.href = `mailto:aswin@aswincloud.com?subject=${subject}&body=${body}`;
-    formContent.style.display = 'none';
-    formSuccess.classList.add('show');
-  }, 800);
+    if (res.status === 204) {
+      formContent.style.display = 'none';
+      formSuccess.classList.add('show');
+    } else {
+      throw new Error(`Status ${res.status}`);
+    }
+  } catch (err) {
+    btn.innerHTML = '⚠️ Failed — try again';
+    btn.disabled = false;
+    console.error('Dispatch error:', err);
+  }
 });
 
 /* ===== COUNTER ANIMATION ===== */

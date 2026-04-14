@@ -1,0 +1,22 @@
+name: Send Quote Email
+
+on:
+  repository_dispatch:
+    types: [quote_request]
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send via Resend
+        run: |
+          curl -s -X POST https://api.resend.com/emails \
+            -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "from": "AswinPrints <noreply@aswincloud.com>",
+              "to": ["aswin@aswincloud.com"],
+              "reply_to": "${{ github.event.client_payload.email }}",
+              "subject": "New Quote Request — ${{ github.event.client_payload.name }}",
+              "html": "<div style=\"font-family:sans-serif;max-width:600px;margin:0 auto;background:#0a0a0f;color:#e8e8f0;padding:32px;border-radius:12px\"><div style=\"border-bottom:2px solid #ff6b00;padding-bottom:16px;margin-bottom:24px\"><h1 style=\"color:#ff6b00;margin:0;font-size:24px\">🖨️ New Quote Request</h1><p style=\"color:#8888a0;margin:4px 0 0\">AswinPrints — 3D Printing Services</p></div><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"padding:10px 0;border-bottom:1px solid #22222e;color:#8888a0;width:140px\">Name</td><td style=\"padding:10px 0;border-bottom:1px solid #22222e;font-weight:600\">${{ github.event.client_payload.name }}</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #22222e;color:#8888a0\">Email</td><td style=\"padding:10px 0;border-bottom:1px solid #22222e\"><a href=\"mailto:${{ github.event.client_payload.email }}\" style=\"color:#ff6b00\">${{ github.event.client_payload.email }}</a></td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #22222e;color:#8888a0\">Phone</td><td style=\"padding:10px 0;border-bottom:1px solid #22222e\">${{ github.event.client_payload.phone }}</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #22222e;color:#8888a0\">Print Type</td><td style=\"padding:10px 0;border-bottom:1px solid #22222e\">${{ github.event.client_payload.type }}</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #22222e;color:#8888a0\">Quantity</td><td style=\"padding:10px 0;border-bottom:1px solid #22222e\">${{ github.event.client_payload.qty }}</td></tr></table><div style=\"margin-top:24px\"><p style=\"color:#8888a0;margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:1px\">Description</p><div style=\"background:#1a1a24;border-left:3px solid #ff6b00;padding:16px;border-radius:0 8px 8px 0;line-height:1.6\">${{ github.event.client_payload.desc }}</div></div><div style=\"margin-top:28px;text-align:center\"><a href=\"mailto:${{ github.event.client_payload.email }}\" style=\"display:inline-block;background:linear-gradient(135deg,#ff6b00,#ff8c38);color:white;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none\">Reply to Customer</a></div></div>"
+            }'

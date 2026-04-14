@@ -879,6 +879,8 @@ footer {
   opacity: 1;
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ===== ANIMATIONS ===== */
 .fade-up {
   opacity: 0;
