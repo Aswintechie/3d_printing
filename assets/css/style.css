@@ -757,6 +757,24 @@ section { padding: 100px 5%; }
   box-shadow: 0 8px 32px rgba(255,107,0,0.45);
 }
 
+.file-drop {
+  border: 2px dashed rgba(255,255,255,0.1);
+  border-radius: 10px;
+  transition: border-color var(--transition), background var(--transition);
+  cursor: pointer;
+}
+
+.file-drop:hover, .file-drop.drag-over {
+  border-color: rgba(255,107,0,0.5);
+  background: rgba(255,107,0,0.05);
+}
+
+.file-drop-inner {
+  padding: 1.5rem;
+  text-align: center;
+  pointer-events: none;
+}
+
 .form-note {
   text-align: center;
   font-size: 0.8rem;

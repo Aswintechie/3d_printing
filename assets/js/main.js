@@ -72,6 +72,60 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') navigate(1);
 });
 
+/* ===== FILE UPLOAD ===== */
+const fileInput = document.getElementById('file');
+const fileDrop = document.getElementById('fileDrop');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function showFile(file) {
+  fileName.textContent = file.name;
+  fileSize.textContent = formatBytes(file.size);
+  fileInfo.style.display = 'flex';
+  document.getElementById('fileDropInner').style.display = 'none';
+}
+
+function clearFile() {
+  fileInput.value = '';
+  fileInfo.style.display = 'none';
+  document.getElementById('fileDropInner').style.display = 'block';
+}
+
+fileInput?.addEventListener('change', () => {
+  if (fileInput.files[0]) showFile(fileInput.files[0]);
+});
+
+fileDrop?.addEventListener('click', () => fileInput.click());
+
+fileDrop?.addEventListener('dragover', (e) => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+fileDrop?.addEventListener('dragleave', () => fileDrop.classList.remove('drag-over'));
+fileDrop?.addEventListener('drop', (e) => {
+  e.preventDefault();
+  fileDrop.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) { fileInput.files = e.dataTransfer.files; showFile(file); }
+});
+
+async function uploadFile(file) {
+  const fd = new FormData();
+  fd.append('reqtype', 'fileupload');
+  fd.append('time', '72h');
+  fd.append('fileToUpload', file);
+  const res = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
+    method: 'POST', body: fd,
+  });
+  const url = await res.text();
+  if (!url.startsWith('https://')) throw new Error('Upload failed');
+  return url.trim();
+}
+
 /* ===== QUOTE FORM ===== */
 // Fine-grained PAT: Actions write only on this repo (see README for setup)
 const DISPATCH_TOKEN = 'REPLACE_WITH_DISPATCH_TOKEN';
@@ -93,7 +147,25 @@ form?.addEventListener('submit', async (e) => {
     type:  form.querySelector('[name=type]').value,
     qty:   form.querySelector('[name=qty]').value,
     desc:  form.querySelector('[name=desc]').value.trim(),
+    file_url: '',
+    file_name: '',
   };
+
+  // Upload file if provided
+  const file = fileInput?.files?.[0];
+  if (file) {
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Uploading file…';
+    try {
+      payload.file_url = await uploadFile(file);
+      payload.file_name = file.name;
+    } catch {
+      btn.innerHTML = '⚠️ File upload failed — try again';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Sending…';
 
   try {
     const res = await fetch('https://api.github.com/repos/Aswintechie/3d_printing/dispatches', {
