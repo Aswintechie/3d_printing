@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/IMG20260215094926.jpg" alt="AswinPrints Banner" width="100%" style="border-radius:12px;max-height:320px;object-fit:cover;" />
+<img src="assets/images/IMG20260403160453.jpg" alt="AswinPrints Banner" width="100%" style="border-radius:12px;max-height:320px;object-fit:cover;" />
 
 <br /><br />
 
